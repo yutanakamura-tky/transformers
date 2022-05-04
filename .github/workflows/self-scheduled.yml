@@ -53,13 +53,46 @@ jobs:
         run: |
           echo "::set-output name=matrix::$(python3 -c 'import os; tests = os.getcwd(); model_tests = os.listdir(os.path.join(tests, "models")); d1 = sorted(list(filter(os.path.isdir, os.listdir(tests)))); d2 = sorted(list(filter(os.path.isdir, [f"models/{x}" for x in model_tests]))); d1.remove("models"); d = d2 + d1; print(d)')"
 
-  run_tests_gpu:
+  run_tests_single_gpu:
     name: Model tests
     strategy:
       fail-fast: false
       matrix:
         folders: ${{ fromJson(needs.setup.outputs.matrix) }}
-        machines: [multi-gpu-docker, single-gpu-docker]
+        machines: [single-gpu-docker]
+    runs-on: ${{ matrix.machines }}
+    container:
+      image: huggingface/transformers-all-latest-gpu
+      options: --gpus 0 --shm-size "16gb" --ipc host -v /mnt/cache/.cache/huggingface:/mnt/cache/
+    needs: setup
+    steps:
+      - name: Echo folder ${{ matrix.folders }}
+        shell: bash
+        # For folders like `models/bert`, set an env. var. (`matrix_folders`) to `models_bert`, which will be used to
+        # set the artifact folder names (because the character `/` is not allowed).
+        run: |
+          echo "${{ matrix.folders }}"
+          matrix_folders=${{ matrix.folders }}
+          echo "$matrix_folders"
+          matrix_folders=${matrix_folders/'models/'/'models_'}
+          echo "$matrix_folders"
+          echo "matrix_folders=$matrix_folders" >> $GITHUB_ENV
+
+      - name: Update clone
+        working-directory: /transformers
+        run: git fetch && git checkout ${{ github.sha }}
+
+      - name: Run all tests on GPU
+        working-directory: /transformers
+        run: echo "${{ matrix.folders }}"
+
+  run_tests_multi_gpu:
+    name: Model tests
+    strategy:
+      fail-fast: false
+      matrix:
+        folders: ${{ fromJson(needs.setup.outputs.matrix) }}
+        machines: [multi-gpu-docker]
     runs-on: ${{ matrix.machines }}
     container:
       image: huggingface/transformers-all-latest-gpu
