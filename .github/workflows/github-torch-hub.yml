@@ -3,7 +3,7 @@ name: Torch hub integration
 on:
   push:
     branches:
-      - "*"
+      - "none"
 
 jobs:
   torch_hub_integration:
