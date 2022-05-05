@@ -11,10 +11,7 @@ env:
 jobs:
   setup:
     name: Setup
-    strategy:
-      matrix:
-        machines: [dummy]
-    runs-on: [self-hosted, cpu, ${{ matrix.machines }}]
+    runs-on: [self-hosted, cpu, dummy]
     steps:
       - name: Echo Information
         run: |
