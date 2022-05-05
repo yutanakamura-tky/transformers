@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         machines: [dummy]
-    runs-on: [self-hosted, cpu, dummy]
+    runs-on: ${{ matrix.machines }}
     steps:
       - name: Echo Information
         run: |
