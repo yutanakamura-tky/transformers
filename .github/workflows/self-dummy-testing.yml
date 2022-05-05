@@ -1,0 +1,22 @@
+name: Self-hosted runner (dummy)
+
+on:
+  push:
+    branches:
+      - test_github_actions
+
+env:
+  DUMMY_ENV_VAR: I am dummy
+
+jobs:
+  setup:
+    name: Setup
+    strategy:
+      matrix:
+        machines: [dummy]
+    runs-on: [self-hosted, cpu, ${{ matrix.machines }}]
+    steps:
+      - name: Echo Information
+        run: |
+          echo ${{ matrix.machines }}
+          echo ${{ env.DUMMY_ENV_VAR }}
