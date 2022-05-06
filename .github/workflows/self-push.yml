@@ -3,7 +3,7 @@ name: Self-hosted runner (push)
 on:
   push:
     branches:
-      - test_push_ci_temp
+      - test_push_ci
   repository_dispatch:
 
 env:
@@ -43,9 +43,13 @@ jobs:
         name: Identify models to test
         working-directory: tests
         run: |
-          to_test=$(python3 -c 'import json; with open("test_list.json") as fp: test_map = json.load(fp); print(test_map.keys())')
-          echo $to_test
-          echo "::set-output name=matrix::$to_test"
+          if [ -f test_list.txt ]; then
+              keys=$(python3 -c 'import json; fp = open("test_list.json"); test_map = json.load(fp); fp.close(); d = list(test_map.keys()); d = d[:3]; print(d)')
+          else
+              keys=[]
+          fi
+          echo $keys
+          echo "::set-output name=matrix::$keys"
 
   run_dummy:
     name: Dummy

@@ -502,11 +502,14 @@ def infer_tests_to_run(output_file, diff_with_last_commit=False, filters=None):
             #   - `tests/trainer/test_trainer.py`
             names = test_file.split(os.path.sep)
             if names[1] == "models":
-                # take the part `models/bert`
+                # take the part like `models/bert`
                 key = "/".join(names[1:3])
-            else:
-                # take the part `pipeline`
+            elif len(names) > 2:
+                # take the part like `pipeline`
                 key = "/".join(names[1:2])
+            else:
+                # common test files directly under `tests`
+                key = "common"
 
             if key not in _test_map:
                 _test_map[key] = []
