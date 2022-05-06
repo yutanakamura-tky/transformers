@@ -41,6 +41,7 @@ jobs:
 
       - name: Fetch the tests to run
         run: |
+          pip install --upgrade git
           test_preparation=$(python utils/tests_fetcher.py --diff_with_last_commit)
           echo $test_preparation
 
