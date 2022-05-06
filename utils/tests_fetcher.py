@@ -508,7 +508,7 @@ def infer_tests_to_run(output_file, diff_with_last_commit=False, filters=None):
                 # take the part `pipeline`
                 key = "/".join(names[1:2])
 
-            if key not in test_map:
+            if key not in _test_map:
                 _test_map[key] = []
             _test_map[key].append(test_file)
 
