@@ -21,6 +21,11 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
 
+      - name: Show dir
+        run: |
+          echo $(pwd)
+          echo $(ls -l)
+
       - name: Cleanup
         run: |
           rm -rf tests/__pycache__
