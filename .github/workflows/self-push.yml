@@ -42,8 +42,10 @@ jobs:
       - name: Fetch the tests to run
         run: |
           pip install --upgrade git-python
-          test_preparation=$(python utils/tests_fetcher.py --diff_with_last_commit)
-          echo $test_preparation
+          python utils/tests_fetcher.py --diff_with_last_commit
+          if [ -f test_list.txt ]; then
+            echo $(cat test_list.txt)
+          fi
 
   run_dummy:
     name: Dummy
