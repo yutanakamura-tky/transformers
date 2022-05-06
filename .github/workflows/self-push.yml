@@ -3,7 +3,7 @@ name: Self-hosted runner (push)
 on:
   push:
     branches:
-      - test_push_ci
+      - test_push_ci_temp
   repository_dispatch:
 
 env:
@@ -31,14 +31,6 @@ jobs:
           rm -rf tests/models/__pycache__
           rm -rf reports
 
-      - id: set-matrix
-        name: Identify models to test
-        working-directory: tests
-        run: |
-          to_test=$(python3 -c 'import os; tests = os.getcwd(); model_tests = os.listdir(os.path.join(tests, "models")); d1 = sorted(list(filter(os.path.isdir, os.listdir(tests)))); d2 = sorted(list(filter(os.path.isdir, [f"models/{x}" for x in model_tests]))); d1.remove("models"); d = d2 + d1; d = d[:5]; print(d)')
-          echo $to_test
-          echo "::set-output name=matrix::$to_test"
-
       - name: Fetch the tests to run
         run: |
           pip install --upgrade git-python
@@ -46,6 +38,14 @@ jobs:
           if [ -f test_list.txt ]; then
             echo $(cat test_list.txt)
           fi
+
+      - id: set-matrix
+        name: Identify models to test
+        working-directory: tests
+        run: |
+          to_test=$(python3 -c 'import json; with open("test_list.json") as fp: test_map = json.load(fp); print(test_map.keys())')
+          echo $to_test
+          echo "::set-output name=matrix::$to_test"
 
   run_dummy:
     name: Dummy

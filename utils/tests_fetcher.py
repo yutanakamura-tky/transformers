@@ -495,6 +495,30 @@ def infer_tests_to_run(output_file, diff_with_last_commit=False, filters=None):
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(" ".join(test_files_to_run))
 
+        _test_map = {}
+        for test_file in test_files_to_run:
+            # `test_file` is a path to a test file, starting with `tests/`. For example,
+            #   - `tests/models/bert/test_modeling_bert.py`
+            #   - `tests/trainer/test_trainer.py`
+            names = test_file.split(os.path.sep)
+            if names[1] == "models":
+                # take the part `models/bert`
+                key = "/".join(names[1:3])
+            else:
+                # take the part `pipeline`
+                key = "/".join(names[1:2])
+
+            if key not in test_map:
+                _test_map[key] = []
+            _test_map[key].append(test_file)
+
+        keys = sorted(_test_map.keys())
+        test_map = {k: sorted(_test_map[k]) for k in keys}
+
+        import json
+        with open("test_list.json", "w", encoding="UTF-8") as fp:
+            json.dump(test_map, fp, ensure_ascii=False)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
