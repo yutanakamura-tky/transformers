@@ -41,7 +41,6 @@ jobs:
 
       - id: set-matrix
         name: Identify models to test
-        working-directory: tests
         run: |
           if [ -f test_list.txt ]; then
               keys=$(python3 -c 'import json; fp = open("test_list.json"); test_map = json.load(fp); fp.close(); d = list(test_map.keys()); d = d[:3]; print(d)')
