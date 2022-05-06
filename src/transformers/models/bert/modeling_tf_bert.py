@@ -759,7 +759,7 @@ class TFBertMainLayer(tf.keras.layers.Layer):
     ) -> Union[TFBaseModelOutputWithPoolingAndCrossAttentions, Tuple[tf.Tensor]]:
 
         if not self.config.is_decoder:
-            use_cache = False
+            use_cache = True
 
         if input_ids is not None and inputs_embeds is not None:
             raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
