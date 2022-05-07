@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      test_map: ${{ steps.set-matrix.outputs.test_map }}
     steps:
       - name: Checkout transformers
         uses: actions/checkout@v2
