@@ -85,6 +85,7 @@ jobs:
           echo "${{ fromJson(needs.setup.outputs.test_map).dummy }}"
           echo "${{ fromJson(needs.setup.outputs.test_map) }}.${{ matrix.folders }}"
           echo "${{ fromJson(needs.setup.outputs.test_map)[env.folder] }}"
+          echo "${{ toJson(fromJson(needs.setup.outputs.test_map)[env.folder]) }}"
           echo "${{ fromJson(needs.setup.outputs.matrix) }}"
           echo "${{ matrix.folders }}"
           matrix_folders=${{ matrix.folders }}
