@@ -45,7 +45,7 @@ jobs:
           if [ -f test_list.txt ]; then
               keys=$(python3 -c 'import json; fp = open("test_list.json"); test_map = json.load(fp); fp.close(); d = list(test_map.keys()); d = d[:3]; print(d)')
           else
-              keys=[dummy]
+              keys=[\"dummy\"]
           fi
           echo $keys
           echo "::set-output name=matrix::$keys"
