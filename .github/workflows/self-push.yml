@@ -61,8 +61,6 @@ jobs:
     strategy:
       matrix:
         folders: ${{ fromJson(needs.setup.outputs.matrix) }}
-    env:
-      folder: ${{ matrix.folders }}
     runs-on: ubuntu-latest
     needs: setup
     steps:
@@ -81,15 +79,20 @@ jobs:
         # For folders like `models/bert`, set an env. var. (`matrix_folders`) to `models_bert`, which will be used to
         # set the artifact folder names (because the character `/` is not allowed).
         run: |
-          echo "${{ fromJson(needs.setup.outputs.test_map) }}"
-          echo "${{ fromJson(needs.setup.outputs.test_map).dummy }}"
-          echo "${{ fromJson(needs.setup.outputs.test_map) }}.${{ matrix.folders }}"
-          echo "${{ fromJson(needs.setup.outputs.test_map)[env.folder] }}"
-          echo "${{ toJson(fromJson(needs.setup.outputs.test_map)[env.folder]) }}"
-          echo "${{ fromJson(needs.setup.outputs.matrix) }}"
           echo "${{ matrix.folders }}"
+          echo "${{ fromJson(needs.setup.outputs.test_map)[matrix.folders] }}"
           matrix_folders=${{ matrix.folders }}
           echo "$matrix_folders"
           matrix_folders=${matrix_folders/'models/'/'models_'}
           echo "$matrix_folders"
           echo "matrix_folders=$matrix_folders" >> $GITHUB_ENV
+
+      - name: Install transformers
+        shell: bash
+        run: |
+          pip install --upgrade .[dev]
+
+      - name: Run selected tests
+        shell: bash
+        run: |
+          python -m pytest -v ${{ fromJson(needs.setup.outputs.test_map)[matrix.folders] }}
