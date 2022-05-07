@@ -44,15 +44,18 @@ jobs:
         run: |
           if [ -f test_list.txt ]; then
               keys=$(python3 -c 'import json; fp = open("test_list.json"); test_map = json.load(fp); fp.close(); d = list(test_map.keys()); d = d[:3]; print(d)')
+              test_map=$(python3 -c 'import json; fp = open("test_list.json"); test_map = json.load(fp); fp.close(); print(test_map)')
           else
               keys=[\"dummy\"]
+              test_map={\"dummy\": []}
           fi
           echo $keys
           echo "::set-output name=matrix::$keys"
+          echo "::set-output name=test_map::$test_map"
 
   run_dummy:
     name: Dummy
-    if: contains(fromJson(needs.setup.outputs.matrix), 'dummy')
+    # if: contains(fromJson(needs.setup.outputs.matrix), 'dummy')
     strategy:
       matrix:
         folders: ${{ fromJson(needs.setup.outputs.matrix) }}
@@ -64,11 +67,17 @@ jobs:
         with:
           fetch-depth: 2
 
+      - name: Echo folder ${{ fromJson(needs.setup.outputs.test_map) }}
+        shell: bash
+        run: |
+          echo 1
+
       - name: Echo folder ${{ matrix.folders }}
         shell: bash
         # For folders like `models/bert`, set an env. var. (`matrix_folders`) to `models_bert`, which will be used to
         # set the artifact folder names (because the character `/` is not allowed).
         run: |
+          echo "${{ fromJson(needs.setup.outputs.test_map) }}"
           echo "${{ fromJson(needs.setup.outputs.matrix) }}"
           echo "${{ matrix.folders }}"
           matrix_folders=${{ matrix.folders }}
