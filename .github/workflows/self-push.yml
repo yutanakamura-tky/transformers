@@ -53,7 +53,7 @@ jobs:
           echo $keys
           echo $test_map
           echo "::set-output name=matrix::$keys"
-          echo "::set-output name=test_map::{\"dummy\":[]}"
+          echo "::set-output name=test_map::$test_map"
 
   run_dummy:
     name: Dummy
@@ -80,6 +80,8 @@ jobs:
         # set the artifact folder names (because the character `/` is not allowed).
         run: |
           echo "${{ fromJson(needs.setup.outputs.test_map) }}"
+          echo "${{ fromJson(needs.setup.outputs.test_map) }}"
+          echo "${{ fromJson(needs.setup.outputs.test_map).dummy }}"
           echo "${{ fromJson(needs.setup.outputs.matrix) }}"
           echo "${{ matrix.folders }}"
           matrix_folders=${{ matrix.folders }}
