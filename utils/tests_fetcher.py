@@ -516,7 +516,7 @@ def infer_tests_to_run(output_file, diff_with_last_commit=False, filters=None):
             _test_map[key].append(test_file)
 
         keys = sorted(_test_map.keys())
-        test_map = {k: sorted(_test_map[k]) for k in keys}
+        test_map = {k: " ".join(sorted(_test_map[k])) for k in keys}
 
         import json
         with open("test_list.json", "w", encoding="UTF-8") as fp:
