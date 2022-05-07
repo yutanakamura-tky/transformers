@@ -69,6 +69,7 @@ jobs:
         # For folders like `models/bert`, set an env. var. (`matrix_folders`) to `models_bert`, which will be used to
         # set the artifact folder names (because the character `/` is not allowed).
         run: |
+          echo "${{ fromJson(needs.setup.outputs.matrix) }}"
           echo "${{ matrix.folders }}"
           matrix_folders=${{ matrix.folders }}
           echo "$matrix_folders"
