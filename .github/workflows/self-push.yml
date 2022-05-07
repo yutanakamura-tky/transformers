@@ -80,8 +80,8 @@ jobs:
         # set the artifact folder names (because the character `/` is not allowed).
         run: |
           echo "${{ fromJson(needs.setup.outputs.test_map) }}"
-          echo "${{ fromJson(needs.setup.outputs.test_map) }}"
           echo "${{ fromJson(needs.setup.outputs.test_map).dummy }}"
+          echo "${{ fromJson(needs.setup.outputs.test_map) }}.${{ matrix.folders }}"
           echo "${{ fromJson(needs.setup.outputs.matrix) }}"
           echo "${{ matrix.folders }}"
           matrix_folders=${{ matrix.folders }}
