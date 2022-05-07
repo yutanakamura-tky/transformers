@@ -47,7 +47,7 @@ jobs:
               test_map=$(python3 -c 'import json; fp = open("test_list.json"); test_map = json.load(fp); fp.close(); print(test_map)')
           else
               keys=[\"dummy\"]
-              test_map={\"dummy\": []}
+              test_map=\{\"dummy\": []\}
           fi
           echo $keys
           echo "::set-output name=matrix::$keys"
