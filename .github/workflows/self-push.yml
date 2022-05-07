@@ -52,7 +52,7 @@ jobs:
           echo $keys
           echo $test_map
           echo "::set-output name=matrix::$keys"
-          echo "::set-output name=test_map::$test_map"
+          echo "::set-output name=test_map::{\"dummy\":[]}"
 
   run_dummy:
     name: Dummy
