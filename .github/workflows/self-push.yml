@@ -52,6 +52,7 @@ jobs:
 
   run_dummy:
     name: Dummy
+    if: ${{ fromJson(needs.setup.outputs.matrix) }} != '[]'
     strategy:
       matrix:
         folders: ${{ fromJson(needs.setup.outputs.matrix) }}
