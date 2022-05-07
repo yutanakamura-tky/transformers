@@ -87,12 +87,30 @@ jobs:
           echo "$matrix_folders"
           echo "matrix_folders=$matrix_folders" >> $GITHUB_ENV
 
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Create Venv
+        shell: bash
+        run: |
+          pip install --upgrade pip
+          python3.8 -m venv venv
+          source venv/bin/activate
+          echo "VIRTUAL ENV:" $VIRTUAL_ENV
+
       - name: Install transformers
         shell: bash
         run: |
+          source venv/bin/activate
+          echo "VIRTUAL ENV:" $VIRTUAL_ENV
+          pip install --upgrade pip
           pip install --upgrade .[dev]
 
       - name: Run selected tests
         shell: bash
         run: |
+          source venv/bin/activate
+          echo "VIRTUAL ENV:" $VIRTUAL_ENV
           python -m pytest -v ${{ fromJson(needs.setup.outputs.test_map)[matrix.folders] }}
