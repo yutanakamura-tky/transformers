@@ -35,13 +35,19 @@ jobs:
       - name: Fetch the tests to run
         run: |
           pip install --upgrade git-python
-          python utils/tests_fetcher.py --diff_with_last_commit
-          if [ -f test_list.txt ]; then
-            echo $(cat test_list.txt)
-          fi
+          python utils/tests_fetcher.py --diff_with_last_commit | tee test_preparation.txt
+#          if [ -f test_list.txt ]; then
+#            echo $(cat test_list.txt)
+#          fi
+
+      - name: Report fetched tests
+        uses: actions/upload-artifact@v2
+        with:
+          name: test_fetched
+          path: test_preparation.txt
 
       - id: set-matrix
-        name: Identify models to test
+        name: Organize tests into models
         run: |
           if [ -f test_list.txt ]; then
               keys=$(python3 -c 'import json; fp = open("test_list.json"); test_map = json.load(fp); fp.close(); d = list(test_map.keys()); d = d[:5]; print(d)')
@@ -55,25 +61,102 @@ jobs:
           echo "::set-output name=matrix::$keys"
           echo "::set-output name=test_map::$test_map"
 
-  run_dummy:
-    name: Dummy
+#  run_dummy:
+#    name: Dummy
+#    # if: contains(fromJson(needs.setup.outputs.matrix), 'dummy')
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        folders: ${{ fromJson(needs.setup.outputs.matrix) }}
+#    runs-on: ubuntu-latest
+#    needs: setup
+#    steps:
+#      - name: Checkout transformers
+#        uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 2
+#
+#      - name: Echo folder ${{ fromJson(needs.setup.outputs.test_map) }}
+#        shell: bash
+#        run: |
+#          echo 1
+#
+#      - name: Echo folder ${{ matrix.folders }}
+#        shell: bash
+#        # For folders like `models/bert`, set an env. var. (`matrix_folders`) to `models_bert`, which will be used to
+#        # set the artifact folder names (because the character `/` is not allowed).
+#        run: |
+#          echo "${{ matrix.folders }}"
+#          echo "${{ fromJson(needs.setup.outputs.test_map)[matrix.folders] }}"
+#          matrix_folders=${{ matrix.folders }}
+#          echo "$matrix_folders"
+#          matrix_folders=${matrix_folders/'models/'/'models_'}
+#          echo "$matrix_folders"
+#          echo "matrix_folders=$matrix_folders" >> $GITHUB_ENV
+#
+#      - name: Set up Python 3.8
+#        uses: actions/setup-python@v2
+#        with:
+#          python-version: 3.8
+#
+#      - name: Create Venv
+#        shell: bash
+#        run: |
+#          pip install --upgrade pip
+#          python3.8 -m venv venv
+#          source venv/bin/activate
+#          echo "VIRTUAL ENV:" $VIRTUAL_ENV
+#
+#      - name: Install transformers
+#        shell: bash
+#        run: |
+#          source venv/bin/activate
+#          echo "VIRTUAL ENV:" $VIRTUAL_ENV
+#          pip install --upgrade pip
+#          pip install --upgrade .[dev]
+#
+#      - name: Run selected tests
+#        shell: bash
+#        run: |
+#          source venv/bin/activate
+#          echo "VIRTUAL ENV:" $VIRTUAL_ENV
+#          python -m pytest -v ${{ fromJson(needs.setup.outputs.test_map)[matrix.folders] }}
+
+
+  run_tests_torch_gpu:
+
+    name: Run PyTorch Tests on GPU
+    needs: setup
     # if: contains(fromJson(needs.setup.outputs.matrix), 'dummy')
     strategy:
       fail-fast: false
       matrix:
         folders: ${{ fromJson(needs.setup.outputs.matrix) }}
-    runs-on: ubuntu-latest
-    needs: setup
+    runs-on: [self-hosted, docker-gpu, single-gpu]
+    container:
+      image: pytorch/pytorch:1.9.0-cuda11.1-cudnn8-runtime
+      options: --gpus 0 --shm-size "16gb" --ipc host -v /mnt/cache/.cache/huggingface:/mnt/cache/
     steps:
-      - name: Checkout transformers
+      - name: Install dependencies
+        run: |
+          apt -y update && apt install -y software-properties-common && apt -y update && add-apt-repository -y ppa:git-core/ppa && apt -y update && apt install -y git
+          apt install -y libsndfile1-dev espeak-ng
+          pip install --upgrade pip
+          pip install .[sklearn,testing,onnxruntime,sentencepiece,torch-speech,vision,timm]
+          pip install https://github.com/kpu/kenlm/archive/master.zip
+
+      - name: Launcher docker
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
 
-      - name: Echo folder ${{ fromJson(needs.setup.outputs.test_map) }}
-        shell: bash
+      - name: NVIDIA-SMI
         run: |
-          echo 1
+          nvidia-smi
+
+      - name: Are GPUs recognized by our DL frameworks
+        run: |
+          utils/print_env_pt.py
 
       - name: Echo folder ${{ matrix.folders }}
         shell: bash
@@ -88,30 +171,19 @@ jobs:
           echo "$matrix_folders"
           echo "matrix_folders=$matrix_folders" >> $GITHUB_ENV
 
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+      - name: Run all non-slow selected tests on GPU
+        run: |
+          if [ -f test_list.txt ]; then
+            python -m pytest -n 2 --dist=loadfile -v --make-reports=tests_torch_gpu ${{ fromJson(needs.setup.outputs.test_map)[matrix.folders] }}
+          fi
+
+      - name: Failure short reports
+        if: ${{ failure() }}
+        run: cat reports/tests_torch_gpu/failures_short.txt
+
+      - name: Test suite reports artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
         with:
-          python-version: 3.8
-
-      - name: Create Venv
-        shell: bash
-        run: |
-          pip install --upgrade pip
-          python3.8 -m venv venv
-          source venv/bin/activate
-          echo "VIRTUAL ENV:" $VIRTUAL_ENV
-
-      - name: Install transformers
-        shell: bash
-        run: |
-          source venv/bin/activate
-          echo "VIRTUAL ENV:" $VIRTUAL_ENV
-          pip install --upgrade pip
-          pip install --upgrade .[dev]
-
-      - name: Run selected tests
-        shell: bash
-        run: |
-          source venv/bin/activate
-          echo "VIRTUAL ENV:" $VIRTUAL_ENV
-          python -m pytest -v ${{ fromJson(needs.setup.outputs.test_map)[matrix.folders] }}
+          name: run_all_tests_torch_gpu_test_reports
+          path: reports
